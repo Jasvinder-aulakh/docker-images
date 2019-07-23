@@ -1,0 +1,35 @@
+FROM jenkins/jnlp-slave
+
+# author
+MAINTAINER Jasvinder Singh
+
+# extra metadata
+LABEL version="1.0.1"
+LABEL description="Jenkins jnlp-slave image with ansible and go package"
+
+USER root
+
+RUN mkdir -p /etc/ansible && chmod 755 /etc/ansible
+
+COPY ansible.cfg /etc/ansible/ansible.cfg 
+
+RUN apt-get update 
+
+RUN DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y -q curl apt-transport-https gnupg-agent software-properties-common build-essential ca-certificates git
+
+RUN apt-get update && apt-get install python3-pip build-essential libssl-dev libffi-dev python-dev python3-venv sshpass -y && apt-get clean
+
+RUN curl -s https://storage.googleapis.com/golang/go1.10.1.linux-amd64.tar.gz| tar -v -C /usr/local -xz
+
+# cleanup
+RUN apt-get -qy autoremove
+
+ENV GOPATH /go
+ENV GOROOT /usr/local/go
+ENV PATH $PATH:/usr/local/go/bin
+
+RUN pip3 install ansible
+
+USER jenkins
+
+ENTRYPOINT ["jenkins-slave"]
